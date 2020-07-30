@@ -2,6 +2,7 @@ import { FixedUnit } from 'easy-kline'
 import Panel from '../index'
 
 class Layer {
+    // 画笔肯定不能少
     protected ctx: CanvasRenderingContext2D
     // 图层所属的面板
     protected panel: Panel

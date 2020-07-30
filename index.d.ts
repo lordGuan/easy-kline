@@ -3,7 +3,7 @@ declare module 'easy-kline' {
      * 使用easy-kline需要提供的基础配置
      */
     interface EasyKlineConfig {
-        el: string | HTMLElement
+        el: HTMLElement
         adapter: EasyDataAdapter
     }
 

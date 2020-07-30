@@ -10,14 +10,9 @@ class Panel {
     protected uiLayer: UILayer
     protected dataSet: FixedUnit[]
 
-    constructor(el: HTMLElement) {
-        // 根据容器计算
-        // 要求容器不要有内边距
-        let containerW = el.clientWidth,
-            containerH = el.clientHeight
-
-        containerW = containerW || 1000
-        containerH = containerH || 500
+    constructor(el: HTMLElement, containerW: number, containerH: number) {
+        const wrapper = document.createElement('div')
+        wrapper.setAttribute('style', 'position:relative;width:100%;height:100%')
 
         // 主面板，用于绘制K线
         const mainCanvas = document.createElement('canvas')
@@ -36,13 +31,14 @@ class Panel {
         this.dataLayer = new DataLayer(mainCanvas.getContext('2d'), this)
         this.uiLayer = new UILayer(uiCanvas.getContext('2d'), this)
 
-        el.append(mainCanvas, uiCanvas)
+        wrapper.append(mainCanvas, uiCanvas)
+        el.append(wrapper)
 
         this.el = el
 
         this.setting = {
-            w: el.clientWidth,
-            h: el.clientHeight,
+            w: containerW,
+            h: containerH,
             realUnitW: 10
         }
 
@@ -94,6 +90,13 @@ class Panel {
             resolve()
         })
     }
+
+    /**
+     * 接收
+     */
+    receiveEvent() {}
+
+    receiveData(data) {}
 }
 
 export default Panel
