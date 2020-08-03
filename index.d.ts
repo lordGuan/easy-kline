@@ -4,14 +4,23 @@ declare module 'easy-kline' {
      */
     interface EasyKlineConfig {
         el: HTMLElement
-        adapter: EasyDataAdapter
+        adapter: EasyDataAdapter,
+        symbol: string,
+        interval: number
+    }
+
+    interface SymbolConfig {
+        symbol: string,
+        pricePlace: number, // 价格精度
     }
 
     /**
      * 数据转换装置
      */
     interface EasyDataAdapter {
-        get(start: number, end: number): Unit[]
+        load(symbol: string, onLoad: (config: SymbolConfig) => any): any
+
+        get(start: number, end: number, push: (data: Unit[]) => any): any
 
         sub(onNew: (unit: Unit | Unit[]) => any): number
     }
@@ -39,7 +48,8 @@ declare module 'easy-kline' {
         type: 1 | 2 // 1-表示 open > close 2-表示 open <= close
     }
 
-    export interface IDataPip {}
+    export interface IDataPip {
+    }
 
     interface PanelSetting {
         w: number

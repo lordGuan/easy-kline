@@ -70,3 +70,11 @@ export function createRow(
     row.append(bodyCell, axisCell)
     return row
 }
+
+const TAG_CREATOR_MAP = {
+    'tr': createRow
+}
+
+export function createElement(tag: string, w?: number, h?: number) {
+    TAG_CREATOR_MAP[tag](w, h)
+}

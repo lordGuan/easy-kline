@@ -1,7 +1,5 @@
-export const DEFAULT_UNIT_W = 10 // 默认单位宽度
-export const DEFAULT_SETTING = {
-    // 缩放比
-    scale: 1
-}
-
 export const DEFAULT_CONFIG = {}
+export const DEFAULT_SIZING = {
+    UNIT_W_OF_X: 20, // x轴向的单位宽度
+    EXTEND_PERCENT: 0.3 // 全量数据扩展百分比，应该100=》实际获取130
+}
