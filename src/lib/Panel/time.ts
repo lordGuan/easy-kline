@@ -58,7 +58,9 @@ export class TimePanel extends BasePanel {
     }
 
     update(eventName: string, payload: any): any {
+        console.log("++++", eventName, payload)
         // console.log('TimePanel receive event:', eventName, payload)
+        this.uiPencil.draw(payload.x, payload.y)
     }
 
     /**
