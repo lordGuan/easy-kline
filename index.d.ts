@@ -25,10 +25,6 @@ declare module 'easy-kline' {
         sub(onNew: (unit: Unit | Unit[]) => any): number
     }
 
-    interface ReadyCallback {
-        (): any
-    }
-
     /**
      * 原始基本单位：蜡烛图单个柱子
      */
@@ -48,33 +44,16 @@ declare module 'easy-kline' {
         type: 1 | 2 // 1-表示 open > close 2-表示 open <= close
     }
 
-    export interface IDataPip {
-    }
-
-    interface PanelSetting {
+    interface Sizeable {
         w: number
         h: number
-        realUnitW: number
+
+        render(): HTMLElement
     }
 
-    class Panel {
-        protected canvas: HTMLCanvasElement
-        protected dataLayer: DataLayer
-        setting: PanelSetting
-
-        new(el: HTMLElement)
-    }
-
-    class Layer {
-        protected ctx: CanvasRenderingContext2D
-        protected parent: Panel
-
-        new(ctx: CanvasRenderingContext2D, parent: Panel)
-    }
-
-    class DataLayer extends Layer {
-        draw(data: FixedUnit[])
-
-        drawUnit(unit: FixedUnit, index: number)
+    interface Pencil extends Sizeable {
+        canvas: HTMLCanvasElement
+        ctx: CanvasRenderingContext2D
+        range: [number, number]
     }
 }

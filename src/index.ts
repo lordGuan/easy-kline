@@ -2,41 +2,24 @@ import MOCK_DATA from '../data.json'
 import { DEFAULT_CONFIG, DEFAULT_SIZING } from './constants'
 import { EasyDataAdapter, EasyKlineConfig, FixedUnit, SymbolConfig, Unit } from 'easy-kline'
 import { assign } from 'lodash'
+import { MainPanel, TimePanel, Panel } from './lib/Panel'
 
-import { MainPanel, TimePanel, Panel } from './lib/Panel/base'
-
-/**
- * y轴映射
- */
-interface YAxisMapping {
-    (o: number): number
-}
-
-/**
- * 布局行
- */
-interface LayoutRowInfo {
-    W0: number
-    W1: number
-    H: number
-}
-
-class EasyKline {
+export class EasyKline {
     el: HTMLElement
     config: EasyKlineConfig
     symbolConfig: SymbolConfig
     adapter: EasyDataAdapter
+    mainPanel: Panel
+    timePanel: Panel
     panels: Panel[]
     // 缩放量：由滚动事件计算修改
     scale: number
     // 位移量：由拖拽事件计算修改
     movement: number
-    // 原始数据：有adapter得到
+    // 原始数据：有adapter得到，全量数据
     data: FixedUnit[]
     // 窗口数据：由movement和scale计算得到当前展示用数据
     windowData: FixedUnit[]
-    // y轴映射关系：输入原始值，输出实际的y轴位置或长度
-    yAxisMapping: YAxisMapping
     readyCallbacks: Set<Function>
 
     constructor(config: EasyKlineConfig) {
@@ -61,7 +44,7 @@ class EasyKline {
         // 必须要要有异步的内容，否则onReady注册不上了就
         const { adapter, symbol } = this.config
         // 拉取产品配置
-        adapter.load(symbol, this.dataInit.bind(this))
+        adapter.load(symbol, this.loadAdapter.bind(this))
     }
 
     /**
@@ -80,13 +63,16 @@ class EasyKline {
         // 副区域高度。
         const minorH = containerH - xAxisH - mainH
 
+        this.mainPanel = new MainPanel(containerW, mainH, this)
+        this.timePanel = new TimePanel(containerW, xAxisH, this)
+
         this.panels = [
             // K线面板
-            new MainPanel(containerW, mainH),
+            this.mainPanel,
             // 成交量面板
-            new MainPanel(containerW, minorH),
+            new MainPanel(containerW, minorH, this),
             // 时间轴面板
-            new TimePanel(containerW, xAxisH)
+            this.timePanel
         ]
     }
 
@@ -119,25 +105,21 @@ class EasyKline {
 
     /**
      * 向各个panel广播数据
+     * 拉取全量数据后
+     * scale缩放变化
+     * movement用户拖拽
+     * 都需要重新广播数据，广播出去的应该是窗口数据
      */
     broadcastData() {
         const { data } = this
-        const range = [0, Infinity]
-        // 得到当前数据的范围信息
-        data.forEach((k) => {
-            let max = Math.max(k.high, k.open, k.low, k.close)
-            let min = Math.min(k.high, k.open, k.low, k.close)
-            if (max > range[0]) {
-                range[0] = max
-            }
-
-            if (min < range[1]) {
-                range[1] = min
-            }
-        })
+        // 理论上这里应该下发窗口数据
+        // 主窗口的尺寸，宽度影响具体加载量
+        const { w } = this.panels[0]
+        // 主窗口最大容纳单位数
+        const MAX_UNIT_COUNT = Math.floor(w / DEFAULT_SIZING.UNIT_W_OF_X)
 
         this.panels.forEach(p => {
-            p.dataReceiver(data)
+            p.dataReceiver(data.slice(0, MAX_UNIT_COUNT))
         })
 
         this.ready()
@@ -173,13 +155,16 @@ class EasyKline {
      * 接收adapter提供的symbol配置
      * @param symbolConfig
      */
-    dataInit(symbolConfig: SymbolConfig) {
+    loadAdapter(symbolConfig: SymbolConfig) {
         const { adapter, interval } = this.config
         const fixedInterval = interval * 1000
         this.symbolConfig = symbolConfig
 
-        // 主窗口的尺寸
-        const { w, h } = this.panels[0]
+        // TODO 是否需要根据窗口情况请求数据，定量请求，然后根据窗口分发窗口数据
+        // 根据interval决定条数
+
+        // 主窗口的尺寸，宽度影响具体加载量
+        const { w } = this.panels[0]
         // 主窗口最大容纳单位数
         const MAX_UNIT_COUNT = Math.floor(w / DEFAULT_SIZING.UNIT_W_OF_X)
 
@@ -207,6 +192,8 @@ class EasyKline {
 
         // 拉取到全部数据
         this.data = this.data.concat(newData)
+
+        // 在这里运算窗口数据
 
         this.broadcastData()
     }

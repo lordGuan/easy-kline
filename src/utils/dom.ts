@@ -1,7 +1,5 @@
 /// DOM相关操作
 
-import Panel from '../lib/Panel'
-
 /**
  * 设置元素不可选择
  * @param el
