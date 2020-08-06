@@ -1,8 +1,8 @@
-import { DataPencil } from './base'
+import { BasePencil } from './base'
 import { UIPencil } from './ui'
 import { KindlePencil } from './kline'
-import {TimePencil} from './time'
+import { TimePencil } from './time'
 
 export {
-    DataPencil, UIPencil, KindlePencil, TimePencil
+    BasePencil, UIPencil, KindlePencil, TimePencil
 }

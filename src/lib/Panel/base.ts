@@ -1,71 +1,48 @@
-import { FixedUnit, Sizeable } from 'easy-kline'
-import { DataPencil, UIPencil } from '../Pencil'
-import { AxisPanel } from './axis'
-import { EasyKline } from '../../index'
+import { EasyKline, FixedUnit, Panel, Pencil } from 'easy-kline'
+import { UIPencil } from '../Pencil'
+import { Dep } from '../../utils/dep'
 
-export interface Panel extends Sizeable {
-    el: HTMLElement
-    dataPencil: DataPencil
-    uiPencil: UIPencil
-
-    update(eventName: string, payload: any): any
-
-    dataReceiver(data: FixedUnit[]): any
-
-    getAxisInfo(x: number, y: number): [number, number]
-}
+let id = 0
 
 export class BasePanel implements Panel {
     el: HTMLElement
     h: number
     w: number
-    _w: number
-    dataPencil: DataPencil
+    dataPencil: Pencil
     uiPencil: UIPencil
-    axisPanel: AxisPanel
-    range: [number, number]
+    id: number
     parent: EasyKline
 
-    constructor(containerW: number, h: number, parent: EasyKline) {
-        // 主区域宽度。占比97%
-        const mainW = Math.floor(containerW * 0.97)
-        // y轴宽度。占比3%
-        const yAxisW = containerW - mainW
-
-        this.w = mainW
-        this._w = yAxisW
+    constructor(w: number, h: number) {
+        this.w = w
         this.h = h
-
         // 需要初始化不同的数据画笔
-        // this.dataPencil = new DataPencil(mainW, h)
-        this.uiPencil = new UIPencil(mainW, h)
-        this.uiPencil.setPanel(this)
-        this.axisPanel = new AxisPanel(yAxisW, h)
+        this.uiPencil = new UIPencil(w, h, this)
 
-        this.range = [0, Infinity]
+        if (Dep.target) {
+            this.parent = Dep.target
+            Dep.target.addPanel(this)
+        }
 
-        this.parent = parent
+        this.id = id++
     }
 
     render(): HTMLElement {
-        const tr = document.createElement('tr')
         const td = document.createElement('td')
         const wrapper = document.createElement('div')
 
-        wrapper.setAttribute('style', `position:relative;width:${this.w}px;height:${this.h}px`)
+        td.setAttribute('style', `width:${this.w}px;height:${this.h}px;padding:0`)
+        wrapper.setAttribute('style', 'position:relative;width:100%;height:100%;overflow:hidden')
         wrapper.append(this.dataPencil.render(), this.uiPencil.render())
         td.append(wrapper)
-        tr.append(td, this.axisPanel.render())
-        return tr
+
+        this.el = wrapper
+        return td
     }
 
     dataReceiver(data: FixedUnit[]): any {
     }
 
     update(eventName: string, payload: any): any {
-    }
-
-    getAxisInfo(x: number, y: number): [number, number] {
-        return [0, 0]
     }
 }

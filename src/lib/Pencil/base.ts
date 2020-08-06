@@ -1,12 +1,11 @@
-import { FixedUnit, Pencil } from 'easy-kline'
-import { Panel } from '../Panel'
+import { FixedUnit, Panel, Pencil } from 'easy-kline'
 
-export class DataPencil implements Pencil {
+export class BasePencil implements Pencil{
+    el: HTMLElement
     canvas: HTMLCanvasElement
     ctx: CanvasRenderingContext2D
     w: number
     h: number
-    range: [number, number]
     parent: Panel
 
     constructor(w: number, h: number, parent: Panel) {
@@ -26,22 +25,13 @@ export class DataPencil implements Pencil {
         this.canvas = mainCanvas
         this.ctx = mainCanvas.getContext('2d')
 
+        this.el = mainCanvas
         return mainCanvas
     }
 
-    /**
-     * 主要画K线图
-     * @param data
-     * @param range
-     */
-    draw(data?: FixedUnit[], range?: [number, number]) {
-        this.range = range
-        data.forEach((unit, index) => {
-            this.drawUnit(unit, index)
-        })
+    draw(data: FixedUnit[]) {
     }
 
-    drawUnit(unit: FixedUnit, index: number) {
-
+    drawUI(x: number, y: number): void {
     }
 }

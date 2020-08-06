@@ -1,22 +1,22 @@
 import { FixedUnit } from 'easy-kline'
-import { BasePanel, Panel } from './base'
+import { BasePanel } from './base'
 import { KindlePencil } from '../Pencil'
-import { EasyKline } from '../../index'
 
 /**
  * 基础面板
  */
-export class MainPanel extends BasePanel implements Panel {
-
-    constructor(containerW: number, h: number, parent: EasyKline) {
-        super(containerW, h, parent)
+export class MainPanel extends BasePanel {
+    constructor(w: number, h: number) {
+        super(w, h)
 
         // 初始化蜡烛图画笔
-        this.dataPencil = new KindlePencil(this.w, h, this)
+        this.dataPencil = new KindlePencil(w, h, this)
+
     }
 
     update(eventName: string, payload: any): any {
-        // console.log('MainPanel receive event:', eventName, payload)
+        // 判断鼠标位置，决定是画十字线和竖线
+        this.uiPencil.drawUI(payload.x, payload.y)
     }
 
     /**
@@ -29,12 +29,5 @@ export class MainPanel extends BasePanel implements Panel {
         // 基础面板拿到数据后，绘制K线图
 
         // this.dataPencil.draw()
-    }
-
-    /**
-     * 获取坐标轴信息
-     */
-    getAxisInfo(x, y): [number, number] {
-        return this.parent.timePanel.getAxisInfo(x, y)
     }
 }

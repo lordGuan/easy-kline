@@ -1,16 +1,19 @@
 import MOCK_DATA from '../data.json'
 import { DEFAULT_CONFIG, DEFAULT_SIZING } from './constants'
-import { EasyDataAdapter, EasyKlineConfig, FixedUnit, SymbolConfig, Unit } from 'easy-kline'
+import { EasyDataAdapter, EasyKlineConfig, FixedUnit, Panel, SymbolConfig, Unit } from 'easy-kline'
 import { assign } from 'lodash'
-import { MainPanel, TimePanel, Panel } from './lib/Panel'
+import { MainPanel, TimePanel, RowContainer, AxisPanel } from './lib/Panel'
+import { EmptyPanel } from './lib/Panel/empty'
+import { Dep } from './utils/dep'
 
 export class EasyKline {
     el: HTMLElement
     config: EasyKlineConfig
     symbolConfig: SymbolConfig
     adapter: EasyDataAdapter
-    mainPanel: Panel
-    timePanel: Panel
+    mainPanel: MainPanel
+    timePanel: TimePanel
+    rows: RowContainer<MainPanel, AxisPanel | EmptyPanel>[]
     panels: Panel[]
     // 缩放量：由滚动事件计算修改
     scale: number
@@ -18,8 +21,6 @@ export class EasyKline {
     movement: number
     // 原始数据：有adapter得到，全量数据
     data: FixedUnit[]
-    // 窗口数据：由movement和scale计算得到当前展示用数据
-    windowData: FixedUnit[]
     readyCallbacks: Set<Function>
 
     constructor(config: EasyKlineConfig) {
@@ -32,6 +33,7 @@ export class EasyKline {
         this.scale = 1
         this.movement = 0
         this.data = []
+        this.panels = []
 
         // 初始化组件内部关系
         this.init()
@@ -63,17 +65,25 @@ export class EasyKline {
         // 副区域高度。
         const minorH = containerH - xAxisH - mainH
 
-        this.mainPanel = new MainPanel(containerW, mainH, this)
-        this.timePanel = new TimePanel(containerW, xAxisH, this)
+        Dep.target = this
 
-        this.panels = [
-            // K线面板
-            this.mainPanel,
-            // 成交量面板
-            new MainPanel(containerW, minorH, this),
-            // 时间轴面板
-            this.timePanel
+        const MainRow = new RowContainer(containerW, mainH, MainPanel, AxisPanel)
+        const TimeRow = new RowContainer(containerW, xAxisH, TimePanel, EmptyPanel)
+
+        this.mainPanel = MainRow.mainPanel
+        this.timePanel = TimeRow.mainPanel
+
+        this.rows = [
+            MainRow,
+            new RowContainer(containerW, minorH, MainPanel, AxisPanel),
+            TimeRow
         ]
+
+        Dep.target = undefined
+    }
+
+    addPanel(panel: Panel) {
+        this.panels.push(panel)
     }
 
     /**
@@ -83,11 +93,16 @@ export class EasyKline {
         const { el } = this.config
 
         el.addEventListener('mousemove', (e) => {
-            const position = {
-                x: e.offsetX,
-                y: e.offsetY
-            }
+            const originalX = e.clientX
 
+            // 纠正一下x，保证都落在主中心
+            const { unitW } = this.timePanel
+
+            const position = {
+                event: e,
+                x: Math.floor(originalX / unitW) * unitW + 0.5 * unitW,
+                y: e.clientY
+            }
             this.broadcastEvent('position', position)
         })
     }
@@ -131,10 +146,13 @@ export class EasyKline {
     render() {
         const { el } = this.config
         const table = document.createElement('table')
+        table.setAttribute('cellpading', '0')
+        table.setAttribute('cellspacing', '0')
+        table.setAttribute('style', 'border-spacing: 0;border-collapse: collapse;box-sizing:border-box;border:0')
         const tbody = document.createElement('tbody')
 
-        this.panels.forEach(p => {
-            tbody.append(p.render())
+        this.rows.forEach(r => {
+            table.append(r.render())
         })
 
         table.append(tbody)
@@ -160,7 +178,6 @@ export class EasyKline {
         const fixedInterval = interval * 1000
         this.symbolConfig = symbolConfig
 
-        // TODO 是否需要根据窗口情况请求数据，定量请求，然后根据窗口分发窗口数据
         // 根据interval决定条数
 
         // 主窗口的尺寸，宽度影响具体加载量

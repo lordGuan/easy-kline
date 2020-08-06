@@ -1,7 +1,6 @@
 import { FixedUnit } from 'easy-kline'
 import { BasePanel } from './base'
 import { DEFAULT_SIZING } from '../../constants'
-import { EasyKline } from '../../index'
 import { TimePencil } from '../Pencil'
 
 /**
@@ -22,9 +21,8 @@ export class TimePanel extends BasePanel {
         time: number
     }[]
 
-    constructor(containerW: number, h: number, parent: EasyKline) {
-        super(containerW, h, parent)
-
+    constructor(containerW: number, h: number) {
+        super(containerW, h)
 
         this.scale = 1
         this.movement = 0
@@ -58,9 +56,7 @@ export class TimePanel extends BasePanel {
     }
 
     update(eventName: string, payload: any): any {
-        console.log("++++", eventName, payload)
-        // console.log('TimePanel receive event:', eventName, payload)
-        this.uiPencil.draw(payload.x, payload.y)
+        this.uiPencil.drawUI(payload.x, payload.y)
     }
 
     /**
@@ -70,13 +66,13 @@ export class TimePanel extends BasePanel {
     dataReceiver(data: FixedUnit[]) {
         // 基础面板拿到数据后，绘制K线图
 
-        this.dataPencil.draw()
+        this.dataPencil.draw(data)
     }
 
     /**
      * 获取一个用于
      */
-    getAxisInfo(x: number, y: number): [number, number] {
+    getAxisInfo(x: number, _: number): [number, number] {
         // 求出第i根
         const i = (x - this.start) / this.parent.config.interval
 
