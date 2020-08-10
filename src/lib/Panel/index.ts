@@ -26,6 +26,7 @@ export class RowContainer<T extends Panel, U extends Panel> implements Sizeable 
         // y轴宽度。占比3%
         const yAxisW = w - mainW
 
+        // TODO 主面板和轴面板必须要建立关系
         this.mainPanel = new mainPanel(mainW, h)
         this.axisPanel = new axisPanel(yAxisW, h)
     }

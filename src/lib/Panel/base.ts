@@ -17,6 +17,7 @@ export class BasePanel implements Panel {
         this.w = w
         this.h = h
         // 需要初始化不同的数据画笔
+        // @ts-ignore
         this.uiPencil = new UIPencil(w, h, this)
 
         if (Dep.target) {

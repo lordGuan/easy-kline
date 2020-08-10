@@ -1,7 +1,7 @@
 import { BasePencil } from './base'
 import { TimePanel } from '../Panel'
 
-export class TimePencil extends BasePencil {
+export class TimePencil extends BasePencil<TimePanel> {
     parent: TimePanel
 
     /**
@@ -24,7 +24,7 @@ export class TimePencil extends BasePencil {
                 // 再来画一根小竖线
                 this.ctx.beginPath()
                 this.ctx.moveTo(unit.x, 0)
-                this.ctx.lineTo(unit.x,  5)
+                this.ctx.lineTo(unit.x, 5)
                 this.ctx.stroke()
                 this.ctx.closePath()
 

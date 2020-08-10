@@ -1,14 +1,14 @@
 import { FixedUnit, Panel, Pencil } from 'easy-kline'
 
-export class BasePencil implements Pencil{
+export class BasePencil<T extends Panel> implements Pencil{
     el: HTMLElement
     canvas: HTMLCanvasElement
     ctx: CanvasRenderingContext2D
     w: number
     h: number
-    parent: Panel
+    parent: T
 
-    constructor(w: number, h: number, parent: Panel) {
+    constructor(w: number, h: number, parent: T) {
         this.w = w
         this.h = h
         this.parent = parent
@@ -33,5 +33,15 @@ export class BasePencil implements Pencil{
     }
 
     drawUI(x: number, y: number): void {
+    }
+
+    clear() {
+
+    }
+
+    drawPrice(y: number, price: string): void {
+    }
+
+    drawTime(x: number, time: string): void {
     }
 }

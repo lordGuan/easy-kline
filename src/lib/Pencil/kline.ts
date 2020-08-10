@@ -1,10 +1,11 @@
 // import { FixedUnit } from 'easy-kline'
 import { BasePencil } from './base'
+import { MainPanel } from '../Panel'
 
 /**
  * 画蜡烛图的画笔
  */
-export class KindlePencil extends BasePencil {
+export class KindlePencil extends BasePencil<MainPanel> {
 
     // drawUnit(unit: FixedUnit, index: number) {
     // const ctx = this.ctx

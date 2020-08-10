@@ -7,6 +7,7 @@ import { TimePencil } from '../Pencil'
  * 时间轴面板
  */
 export class TimePanel extends BasePanel {
+    dataPencil: TimePencil
     // 缩放量：由滚动事件计算修改
     scale: number
     // 位移量：由拖拽事件计算修改
@@ -44,7 +45,9 @@ export class TimePanel extends BasePanel {
         // 当前时刻对应的周期点
         const end = now - (now % fixedInterval)
 
-        // this.timeline.push()
+        this.start = end - Math.floor((MAX_UNIT_COUNT - 1) * (1 + DEFAULT_SIZING.EXTEND_PERCENT)) * fixedInterval
+        this.end = end
+
         for (let i = MAX_UNIT_COUNT - 1; i >= 0; i--) {
             this.timeline.push({
                 time: end - Math.floor((MAX_UNIT_COUNT - i - 1) * (1 + DEFAULT_SIZING.EXTEND_PERCENT)) * fixedInterval,
@@ -56,34 +59,33 @@ export class TimePanel extends BasePanel {
     }
 
     update(eventName: string, payload: any): any {
-        this.uiPencil.drawUI(payload.x, payload.y)
+        if (eventName === 'mousemove') {
+            const { x } = payload
+            const { unitW, w } = this
+
+            if (x > w) {
+                this.uiPencil.clear()
+                return
+            }
+
+            const c = (x - Math.floor(0.5 * unitW)) / unitW
+            const time = this.start + c * this.parent.config.interval * 1000
+
+            this.uiPencil.drawTime(payload.x, new Date(time).toLocaleString())
+        }
+
+        if (eventName === 'mouseleave') {
+            this.uiPencil.clear()
+        }
     }
 
     /**
      * 接收数据
-     * @param data
+     * @param _
      */
-    dataReceiver(data: FixedUnit[]) {
+    dataReceiver(_: FixedUnit[]) {
         // 基础面板拿到数据后，绘制K线图
 
-        this.dataPencil.draw(data)
-    }
-
-    /**
-     * 获取一个用于
-     */
-    getAxisInfo(x: number, _: number): [number, number] {
-        // 求出第i根
-        const i = (x - this.start) / this.parent.config.interval
-
-        // 求第i根在canvas上的定位
-        return [Math.floor((i - 1 / 2) * this.unitW), 0]
-        // return (time) => {
-        //     // 求出第i根
-        //     const i = (time - this.start) / this.parent.config.interval
-        //
-        //     // 求第i根在canvas上的定位
-        //     return (i - 1 / 2) * this.unitW
-        // }
+        this.dataPencil.draw()
     }
 }

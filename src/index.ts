@@ -13,7 +13,7 @@ export class EasyKline {
     adapter: EasyDataAdapter
     mainPanel: MainPanel
     timePanel: TimePanel
-    rows: RowContainer<MainPanel, AxisPanel | EmptyPanel>[]
+    rows: RowContainer<MainPanel | TimePanel, AxisPanel | EmptyPanel>[]
     panels: Panel[]
     // 缩放量：由滚动事件计算修改
     scale: number
@@ -22,6 +22,7 @@ export class EasyKline {
     // 原始数据：有adapter得到，全量数据
     data: FixedUnit[]
     readyCallbacks: Set<Function>
+    isReady: boolean
 
     constructor(config: EasyKlineConfig) {
         // 配置阶段
@@ -34,6 +35,7 @@ export class EasyKline {
         this.movement = 0
         this.data = []
         this.panels = []
+        this.isReady = false
 
         // 初始化组件内部关系
         this.init()
@@ -100,10 +102,14 @@ export class EasyKline {
 
             const position = {
                 event: e,
-                x: Math.floor(originalX / unitW) * unitW + 0.5 * unitW,
+                x: Math.floor(originalX / unitW) * unitW,
                 y: e.clientY
             }
-            this.broadcastEvent('position', position)
+            this.broadcastEvent('mousemove', position)
+        })
+
+        el.addEventListener('mouseleave', _ => {
+            this.broadcastEvent('mouseleave', {})
         })
     }
 
@@ -113,9 +119,12 @@ export class EasyKline {
      * @param payload 事件参数
      */
     broadcastEvent(eventName: string, payload: any) {
-        this.panels.forEach((p) => {
-            p.update(eventName, payload)
-        })
+        // 数据就绪后事件的处理才能全面
+        if (this.isReady) {
+            this.panels.forEach((p) => {
+                p.update(eventName, payload)
+            })
+        }
     }
 
     /**
@@ -174,22 +183,13 @@ export class EasyKline {
      * @param symbolConfig
      */
     loadAdapter(symbolConfig: SymbolConfig) {
-        const { adapter, interval } = this.config
-        const fixedInterval = interval * 1000
+        const { adapter } = this.config
         this.symbolConfig = symbolConfig
 
         // 根据interval决定条数
 
         // 主窗口的尺寸，宽度影响具体加载量
-        const { w } = this.panels[0]
-        // 主窗口最大容纳单位数
-        const MAX_UNIT_COUNT = Math.floor(w / DEFAULT_SIZING.UNIT_W_OF_X)
-
-        const now = Date.now()
-        // 根据interval决定拉取数据的范围
-        // 当前时刻对应的周期点
-        const end = now - (now % fixedInterval)
-        const start = end - Math.floor(MAX_UNIT_COUNT * (1 + DEFAULT_SIZING.EXTEND_PERCENT)) * fixedInterval
+        const { start, end } = this.timePanel
 
         // 向adapter拉取数据
         adapter.get(start, end, this.pull.bind(this))
@@ -216,6 +216,7 @@ export class EasyKline {
     }
 
     ready() {
+        this.isReady = true
         this.readyCallbacks.forEach(cb => {
             cb()
         })

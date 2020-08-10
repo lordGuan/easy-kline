@@ -82,6 +82,12 @@ declare module 'easy-kline' {
         draw(data: FixedUnit[]): void
 
         drawUI(x: number, y: number): void
+
+        drawTime(x: number, time: string): void
+
+        drawPrice(y: number, price: string): void
+
+        clear(): void
     }
 
     interface Panel extends Sizeable {

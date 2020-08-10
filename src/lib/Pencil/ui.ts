@@ -1,11 +1,7 @@
-import { Panel } from 'easy-kline'
 import { BasePencil } from './base'
+import { MainPanel } from '../Panel'
 
-export class UIPencil extends BasePencil {
-    constructor(w: number, h: number, parent: Panel) {
-        super(w, h, parent)
-    }
-
+export class UIPencil extends BasePencil<MainPanel> {
     render(): HTMLCanvasElement {
         const { w, h } = this
         const uiCanvas = document.createElement('canvas')
@@ -26,10 +22,10 @@ export class UIPencil extends BasePencil {
      */
     drawUI(x: number, y: number) {
         const { offsetLeft, offsetTop } = this.parent.el
-        const { ctx, w, h } = this
+        const { w, h } = this
 
 
-        ctx.clearRect(0, 0, w, h)
+        this.clear()
         if (x > offsetLeft && x < offsetLeft + w) {
             this.drawX(x)
         }
@@ -45,7 +41,7 @@ export class UIPencil extends BasePencil {
     drawY(y: number) {
         const { ctx, w } = this
         ctx.beginPath()
-        ctx.setLineDash([5, 2])
+        ctx.setLineDash([3, 3])
         ctx.moveTo(0, y)
         ctx.lineTo(w, y)
         ctx.closePath()
@@ -58,10 +54,67 @@ export class UIPencil extends BasePencil {
     drawX(x: number) {
         const { ctx, h } = this
         ctx.beginPath()
-        ctx.setLineDash([5, 2])
+        ctx.setLineDash([3, 3])
         ctx.moveTo(x, 0)
         ctx.lineTo(x, h)
         ctx.closePath()
         ctx.stroke()
+    }
+
+    drawTime(x: number, time: string) {
+        const { ctx, h, w } = this
+        this.clear()
+
+        // 画一个彩色框框
+        const textWidth = ctx.measureText(time).width + 10
+        const halfTextWidth = Math.floor(0.5 * textWidth)
+        let fixedX = x - halfTextWidth
+        let rectX = fixedX
+        let textX = x
+
+        // 左边界
+        if (fixedX < 0) {
+            rectX = 0
+            textX = x - fixedX
+        }
+
+        // 右边界
+        if (x + halfTextWidth > w) {
+            rectX = w - textWidth
+            textX = w - halfTextWidth
+        }
+
+        ctx.fillStyle = 'rgba(88,88,88,.7)'
+        ctx.fillRect(rectX, 0, textWidth, h)
+
+        // 再画文字
+        ctx.fillStyle = '#FFFFFF'
+        ctx.textAlign = 'center'
+        ctx.fillText(time, textX, 15)
+    }
+
+    /**
+     * 在指定位置绘制价格
+     * @param y
+     * @param price
+     */
+    drawPrice(y: number, price: string) {
+        const { ctx, w } = this
+        this.clear()
+
+        // 画一个彩色框框
+        ctx.fillStyle = 'rgba(88,88,88,.7)'
+        ctx.fillRect(0, y - 10, w, 20)
+
+        // 再画文字
+        ctx.fillStyle = '#ffffff'
+        ctx.textBaseline = 'middle'
+        ctx.textAlign = 'center'
+        ctx.fillText(price, Math.floor(0.5 * w), y)
+    }
+
+    clear() {
+        const { ctx, w, h } = this
+        ctx.clearRect(0, 0, w, h)
     }
 }
