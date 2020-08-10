@@ -1,7 +1,8 @@
 import { MainPanel } from './main'
 import { TimePanel } from './time'
 import { AxisPanel } from './axis'
-import { Panel, PanelConstructor, Sizeable } from 'easy-kline'
+import { PanelConstructor, Sizeable } from 'easy-kline'
+import { BasePanel } from './base'
 
 export {
     MainPanel, TimePanel, AxisPanel
@@ -10,7 +11,7 @@ export {
 /*
  * 单纯是个UI容器
  */
-export class RowContainer<T extends Panel, U extends Panel> implements Sizeable {
+export class RowContainer<T extends BasePanel, U extends BasePanel> implements Sizeable {
     el: HTMLElement
     h: number
     w: number
@@ -26,9 +27,11 @@ export class RowContainer<T extends Panel, U extends Panel> implements Sizeable 
         // y轴宽度。占比3%
         const yAxisW = w - mainW
 
-        // TODO 主面板和轴面板必须要建立关系
+        // 主面板和轴面板必须要建立关系
         this.mainPanel = new mainPanel(mainW, h)
         this.axisPanel = new axisPanel(yAxisW, h)
+
+        this.mainPanel.bindAxis(this.axisPanel)
     }
 
     render(): HTMLElement {

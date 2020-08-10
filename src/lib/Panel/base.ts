@@ -1,10 +1,13 @@
-import { EasyKline, FixedUnit, Panel, Pencil } from 'easy-kline'
+import { FixedUnit, Pencil } from 'easy-kline'
 import { UIPencil } from '../Pencil'
+import { AxisPanel } from './axis'
+import { EmptyPanel } from './empty'
+import { EasyKline } from '../../index'
 import { Dep } from '../../utils/dep'
 
 let id = 0
 
-export class BasePanel implements Panel {
+export class BasePanel {
     el: HTMLElement
     h: number
     w: number
@@ -12,17 +15,16 @@ export class BasePanel implements Panel {
     uiPencil: UIPencil
     id: number
     parent: EasyKline
+    axis: AxisPanel | EmptyPanel
 
     constructor(w: number, h: number) {
         this.w = w
         this.h = h
         // 需要初始化不同的数据画笔
-        // @ts-ignore
         this.uiPencil = new UIPencil(w, h, this)
 
         if (Dep.target) {
             this.parent = Dep.target
-            Dep.target.addPanel(this)
         }
 
         this.id = id++
@@ -45,5 +47,42 @@ export class BasePanel implements Panel {
     }
 
     update(eventName: string, payload: any): any {
+    }
+
+    bindAxis(axisPanel: AxisPanel | EmptyPanel) {
+        this.axis = axisPanel
+    }
+}
+
+export class BaseMainPanel extends BasePanel {
+    range: [number, number]
+
+    constructor(w: number, h: number) {
+        super(w, h)
+        this.range = [Infinity, 0]
+    }
+
+    update(eventName: string, payload: any): any {
+        // 判断鼠标位置，决定是画十字线和竖线
+        if (eventName === 'mousemove') {
+            const { offsetTop, offsetLeft } = this.el
+            const { w, h } = this
+            const { x, y } = payload
+
+            this.uiPencil.clear()
+            if (x > offsetLeft && x < offsetLeft + w) {
+                this.uiPencil.drawX(x)
+            }
+
+            if (y > offsetTop && y < offsetTop + h) {
+                this.uiPencil.drawY(y - offsetTop)
+            }
+        }
+
+        if (eventName === 'mouseleave') {
+            this.uiPencil.clear()
+        }
+
+        this.axis.update(eventName, payload)
     }
 }

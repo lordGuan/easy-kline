@@ -1,6 +1,7 @@
-import { FixedUnit, Panel, Pencil } from 'easy-kline'
+import { FixedUnit } from 'easy-kline'
+import { BasePanel } from '../Panel/base'
 
-export class BasePencil<T extends Panel> implements Pencil{
+export class BasePencil<T extends BasePanel> {
     el: HTMLElement
     canvas: HTMLCanvasElement
     ctx: CanvasRenderingContext2D

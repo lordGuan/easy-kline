@@ -2,6 +2,7 @@ import { FixedUnit } from 'easy-kline'
 import { BasePanel } from './base'
 import { DEFAULT_SIZING } from '../../constants'
 import { TimePencil } from '../Pencil'
+import { Dep } from '../../utils/dep'
 
 /**
  * 时间轴面板
@@ -24,6 +25,10 @@ export class TimePanel extends BasePanel {
 
     constructor(containerW: number, h: number) {
         super(containerW, h)
+
+        if (Dep.target) {
+            Dep.target.addPanel(this)
+        }
 
         this.scale = 1
         this.movement = 0

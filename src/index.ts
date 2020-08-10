@@ -1,10 +1,13 @@
 import MOCK_DATA from '../data.json'
 import { DEFAULT_CONFIG, DEFAULT_SIZING } from './constants'
-import { EasyDataAdapter, EasyKlineConfig, FixedUnit, Panel, SymbolConfig, Unit } from 'easy-kline'
+import { EasyDataAdapter, EasyKlineConfig, FixedUnit, SymbolConfig, Unit } from 'easy-kline'
 import { assign } from 'lodash'
 import { MainPanel, TimePanel, RowContainer, AxisPanel } from './lib/Panel'
 import { EmptyPanel } from './lib/Panel/empty'
 import { Dep } from './utils/dep'
+import { VolumePanel } from './lib/Panel/volume'
+
+type Panel = MainPanel | TimePanel | AxisPanel | EmptyPanel
 
 export class EasyKline {
     el: HTMLElement
@@ -13,7 +16,7 @@ export class EasyKline {
     adapter: EasyDataAdapter
     mainPanel: MainPanel
     timePanel: TimePanel
-    rows: RowContainer<MainPanel | TimePanel, AxisPanel | EmptyPanel>[]
+    rows: RowContainer<MainPanel | TimePanel | VolumePanel, AxisPanel | EmptyPanel>[]
     panels: Panel[]
     // 缩放量：由滚动事件计算修改
     scale: number
@@ -40,10 +43,10 @@ export class EasyKline {
         // 初始化组件内部关系
         this.init()
 
+        this.el = this.render()
+
         // 初始化基本的事件系统
         this.bindEvent()
-
-        this.render()
 
         // 必须要要有异步的内容，否则onReady注册不上了就
         const { adapter, symbol } = this.config
@@ -77,7 +80,7 @@ export class EasyKline {
 
         this.rows = [
             MainRow,
-            new RowContainer(containerW, minorH, MainPanel, AxisPanel),
+            new RowContainer(containerW, minorH, VolumePanel, AxisPanel),
             TimeRow
         ]
 
@@ -92,23 +95,23 @@ export class EasyKline {
      * 初始化事件系统
      */
     bindEvent() {
-        const { el } = this.config
+        this.el.addEventListener('mousemove', (e) => {
+            // 纠正一下x，保证都落在主中心，（注意offsetX和clientX的区别）
+            const { top, left } = this.el.getBoundingClientRect()
 
-        el.addEventListener('mousemove', (e) => {
-            const originalX = e.clientX
-
-            // 纠正一下x，保证都落在主中心
+            const originalX = e.clientX - left
             const { unitW } = this.timePanel
 
             const position = {
                 event: e,
-                x: Math.floor(originalX / unitW) * unitW,
-                y: e.clientY
+                x: Math.floor(originalX / unitW) * unitW + 0.5 * unitW,
+                y: e.clientY - top
             }
+
             this.broadcastEvent('mousemove', position)
         })
 
-        el.addEventListener('mouseleave', _ => {
+        this.el.addEventListener('mouseleave', _ => {
             this.broadcastEvent('mouseleave', {})
         })
     }

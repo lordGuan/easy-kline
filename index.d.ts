@@ -45,27 +45,6 @@ declare module 'easy-kline' {
         type: 1 | 2 // 1-表示 open > close 2-表示 open <= close
     }
 
-    interface RowContainer<T extends Panel, U extends Panel> {
-
-    }
-
-    interface EasyKline {
-        el: HTMLElement
-        config: EasyKlineConfig
-        symbolConfig: SymbolConfig
-        adapter: EasyDataAdapter
-        mainPanel: Panel
-        timePanel: Panel
-        rows: RowContainer<Panel, Panel>[]
-        panels: Panel[]
-        // 缩放量：由滚动事件计算修改
-        scale: number
-        // 位移量：由拖拽事件计算修改
-        movement: number
-        // 原始数据：有adapter得到，全量数据
-        data: FixedUnit[]
-        readyCallbacks: Set<Function>
-    }
 
     interface Sizeable {
         el: HTMLElement
@@ -90,14 +69,6 @@ declare module 'easy-kline' {
         clear(): void
     }
 
-    interface Panel extends Sizeable {
-        id: number
-        parent: EasyKline
-
-        update(eventName: string, payload: any): any
-
-        dataReceiver(data: FixedUnit[]): any
-    }
 
     interface PanelConstructor<T> {
         new(w: number, h: number): T

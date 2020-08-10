@@ -1,51 +1,52 @@
 import { FixedUnit } from 'easy-kline'
-import { BasePanel } from './base'
+import { BaseMainPanel } from './base'
 import { KindlePencil } from '../Pencil'
+import { AxisPanel } from './axis'
+import { Dep } from '../../utils/dep'
 
 /**
  * 基础面板
  */
-export class MainPanel extends BasePanel {
+export class MainPanel extends BaseMainPanel {
     dataPencil: KindlePencil
+    axis: AxisPanel
 
     constructor(w: number, h: number) {
         super(w, h)
+
+        if (Dep.target) {
+            Dep.target.addPanel(this)
+        }
 
         // 初始化蜡烛图画笔
         this.dataPencil = new KindlePencil(w, h, this)
     }
 
-    update(eventName: string, payload: any): any {
-        // 判断鼠标位置，决定是画十字线和竖线
-        if (eventName === 'mousemove') {
-            const { offsetTop, offsetLeft } = this.el
-            const { w, h } = this
-            const { x, y } = payload
-
-            this.uiPencil.clear()
-            if (x > offsetLeft && x < offsetLeft + w) {
-                this.uiPencil.drawX(x)
-            }
-
-            if (y > offsetTop && y < offsetTop + h) {
-                this.uiPencil.drawY(y - offsetTop)
-            }
-        }
-
-        if (eventName === 'mouseleave') {
-            this.uiPencil.clear()
-        }
-    }
 
     /**
      * 接收数据
      * @param data
      */
     dataReceiver(data: FixedUnit[]) {
-        // 坐标轴信息讲道理应该有数据确定
+
+        // 取价格区间
+        data.forEach(unit => {
+            const { open, close, high, low } = unit
+            let max = Math.max(open, close, high, low)
+            let min = Math.min(open, close, high, low)
+            if (max > this.range[1]) {
+                this.range[1] = max
+            }
+            if (min < this.range[0]) {
+                this.range[0] = min
+            }
+        })
+
+        // 先广播给轴，在进行画图，保证轴信息完备
+        // this.axis.dataReceiver(data)
+        this.axis.rangeUpdate(this.range)
 
         // 基础面板拿到数据后，绘制K线图
-
-        // this.dataPencil.draw()
+        this.dataPencil.draw(data)
     }
 }

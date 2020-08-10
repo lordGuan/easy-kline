@@ -1,7 +1,7 @@
 import { BasePencil } from './base'
-import { MainPanel } from '../Panel'
+import { BasePanel } from '../Panel/base'
 
-export class UIPencil extends BasePencil<MainPanel> {
+export class UIPencil extends BasePencil<BasePanel> {
     render(): HTMLCanvasElement {
         const { w, h } = this
         const uiCanvas = document.createElement('canvas')

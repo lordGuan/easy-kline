@@ -1,4 +1,3 @@
-import { FixedUnit } from 'easy-kline'
 import { BasePanel } from './base'
 import { AxisPencil } from '../Pencil/axis'
 import { floor } from 'lodash'
@@ -20,8 +19,8 @@ export class AxisPanel extends BasePanel {
 
     update(eventName: string, payload: any): any {
         const { y } = payload
-        const price = this.yToP(y)
         const { offsetTop } = this.el
+        const price = this.yToP(y - offsetTop)
         const { h } = this
 
 
@@ -32,29 +31,16 @@ export class AxisPanel extends BasePanel {
         }
     }
 
-    dataReceiver(data: FixedUnit[]): any {
+    rangeUpdate(range: [number, number]) {
         // 接到数据，保留价格部分
         // 扩张率5%，上下各扩张5%
         const expendRate = 0.05
 
-        // 取价格区间
-        data.forEach(unit => {
-            const { open, close, high, low } = unit
-            let max = Math.max(open, close, high, low)
-            let min = Math.min(open, close, high, low)
-            if (max > this.range[1]) {
-                this.range[1] = max
-            }
-            if (min < this.range[0]) {
-                this.range[0] = min
-            }
-        })
-
         // 扩张区间
-        let rangeDiff = this.range[1] - this.range[0],
+        let rangeDiff = range[1] - range[0],
             expend = (expendRate / (1 - 2 * expendRate)) * rangeDiff
 
-        this.totalRange = [this.range[0] - expend, this.range[1] + expend]
+        this.totalRange = [range[0] - expend, range[1] + expend]
 
         this.dataPencil.draw()
     }
@@ -78,7 +64,7 @@ export class AxisPanel extends BasePanel {
      */
     pToY(p: number) {
         const { h } = this
-        const [top, bottom] = this.totalRange
+        const [bottom, top] = this.totalRange
 
         return h * ((top - p) / (top - bottom))
     }
